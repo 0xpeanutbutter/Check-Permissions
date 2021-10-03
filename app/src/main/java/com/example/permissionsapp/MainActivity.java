@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
                         j++;
                     }
                     Log.e("packages",packages.length+"");
-                    Intent intent = new Intent(MainActivity.this, Display_apps.class);
+                    Intent intent = new Intent(MainActivity.this, DisplayApps.class);
                     Bundle bundle = new Bundle();
                     bundle.putStringArray("packages",packages);
                     intent.putExtras(bundle);
