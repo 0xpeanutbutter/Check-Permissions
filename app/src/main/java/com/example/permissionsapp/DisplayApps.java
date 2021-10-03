@@ -18,18 +18,24 @@ public class DisplayApps extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_display_apps);
+        try {
+            setContentView(R.layout.activity_display_apps);
 
-        appListView = findViewById(R.id.applistview);
-        final Bundle bundle = getIntent().getExtras();
-        final String [] str = bundle.getStringArray("packages");
-        try{
-            final ArrayAdapter<String> adapter = new ArrayAdapter<>(DisplayApps.this, android.R.layout.simple_list_item_1,str);
-            appListView.setAdapter(adapter);
-            } catch (Exception exception) {
-            exception.printStackTrace();
+            this.appListView = findViewById(R.id.applistview);
+            this.appListView.setAdapter(createAdapter());
+            this.appListView.setOnItemClickListener(this::showApplicationDetails);
+        } catch (final RuntimeException e) {
+            e.printStackTrace();
         }
-        appListView.setOnItemClickListener(this::showApplicationDetails);
+    }
+
+    private ArrayAdapter<String> createAdapter() {
+        final Bundle bundle = getIntent().getExtras();
+        final String[] str = bundle.getStringArray("packages");
+        return new ArrayAdapter<>(
+                DisplayApps.this,
+                android.R.layout.simple_list_item_1,
+                str);
     }
 
     private void showApplicationDetails(
@@ -44,8 +50,8 @@ public class DisplayApps extends AppCompatActivity {
     private Intent createIntent(final AdapterView<?> parent, final int position) {
         final String selectedApp = (String) parent.getItemAtPosition(position);
         final Intent settingIntent = new Intent(
-            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-            Uri.fromParts("package", selectedApp, null));
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.fromParts("package", selectedApp, null));
         return settingIntent;
     }
 }
