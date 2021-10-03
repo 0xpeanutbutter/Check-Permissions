@@ -9,6 +9,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class DisplayApps extends AppCompatActivity {
@@ -36,10 +37,15 @@ public class DisplayApps extends AppCompatActivity {
             final View view,
             final int position,
             final long l) {
+        final Intent settingIntent = createIntent(parent, position);
+        startActivity(settingIntent);
+    }
+
+    private Intent createIntent(final AdapterView<?> parent, final int position) {
         final String selectedApp = (String) parent.getItemAtPosition(position);
         final Intent settingIntent = new Intent(
-            Settings.ACTION_APPLICATION_DETAILS_SETTINGS, 
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
             Uri.fromParts("package", selectedApp, null));
-        startActivity(settingIntent);
+        return settingIntent;
     }
 }
