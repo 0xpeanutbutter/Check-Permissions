@@ -9,7 +9,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class DisplayApps extends AppCompatActivity {
@@ -30,12 +29,14 @@ public class DisplayApps extends AppCompatActivity {
     }
 
     private ArrayAdapter<String> createAdapter() {
-        final Bundle bundle = getIntent().getExtras();
-        final String[] str = bundle.getStringArray("packages");
         return new ArrayAdapter<>(
-                DisplayApps.this,
+                this,
                 android.R.layout.simple_list_item_1,
-                str);
+                getAppPackages());
+    }
+
+    private String[] getAppPackages() {
+        return getIntent().getExtras().getStringArray("packages");
     }
 
     private void showApplicationDetails(
@@ -49,9 +50,8 @@ public class DisplayApps extends AppCompatActivity {
 
     private Intent createIntent(final AdapterView<?> parent, final int position) {
         final String selectedApp = (String) parent.getItemAtPosition(position);
-        final Intent settingIntent = new Intent(
+        return new Intent(
                 Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                 Uri.fromParts("package", selectedApp, null));
-        return settingIntent;
     }
 }
