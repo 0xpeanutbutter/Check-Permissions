@@ -14,6 +14,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -53,21 +54,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private Map<String, String> findAppPermissions() {
-        final Field[] fields = Manifest.permission.class.getFields();
-        // Retain the order for consistency
-        final Map<String, String> permissionMap = new LinkedHashMap<>();
-        return Arrays.stream(fields)
-                .map(field -> {
-                    try {
-                        final String permName = (String) field.get(Manifest.permission.class);
-                        final PermissionInfo permissionInfo = getPackageManager().getPermissionInfo(permName, GET_META_DATA);
-                        Log.d("permissions", "Adding permission " + permissionInfo.name);
-                        return permissionInfo.name;
-                    } catch (final PackageManager.NameNotFoundException | IllegalAccessException e) {
-                        e.printStackTrace();
-                        return null; // Using null to indicate a value that cannot be processed
-                    }
-                })
+        return Arrays.stream(Manifest.permission.class.getFields())
+                .map(this::findPermissionName)
                 .filter(Objects::nonNull)
                 .sequential()
                 .collect(Collectors.toMap(
@@ -76,7 +64,21 @@ public class MainActivity extends AppCompatActivity {
                         (a, b) -> {
                             throw new UnsupportedOperationException("No parallel reduction");
                         },
+                        // Retain the order for consistency between different calls
                         LinkedHashMap::new));
+    }
+
+    private @Nullable
+    String findPermissionName(final Field field) {
+        try {
+            final String permName = (String) field.get(Manifest.permission.class);
+            final PermissionInfo permissionInfo = getPackageManager().getPermissionInfo(permName, GET_META_DATA);
+            Log.d("permissions", "Adding permission " + permissionInfo.name);
+            return permissionInfo.name;
+        } catch (final PackageManager.NameNotFoundException | IllegalAccessException e) {
+            Log.e("permissions", "Cannot list permission of " + field, e);
+            return null; // Using null to indicate a value that cannot be processed
+        }
     }
 
     private static String extractId(final String permissionName) {
