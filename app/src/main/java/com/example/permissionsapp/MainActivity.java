@@ -19,9 +19,13 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static android.content.pm.PackageManager.GET_META_DATA;
 
@@ -52,27 +56,38 @@ public class MainActivity extends AppCompatActivity {
         final Field[] fields = Manifest.permission.class.getFields();
         // Retain the order for consistency
         final Map<String, String> permissionMap = new LinkedHashMap<>();
-        for (Field field : fields) {
-            try {
-                final String permName = (String) field.get(Manifest.permission.class);
-                final PermissionInfo permissionInfo = getPackageManager().getPermissionInfo(permName, GET_META_DATA);
-                final String[] trimmedPerm = permissionInfo.name.split("\\.", 3);
-                if (trimmedPerm.length >= 1) {
-                    final String permissionId = trimmedPerm[trimmedPerm.length - 1];
-                    permissionMap.put(permissionId, permissionInfo.name);
-                    Log.d("Value", permissionId);
-                }
-            } catch (PackageManager.NameNotFoundException | IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
-        return permissionMap;
+        return Arrays.stream(fields)
+                .map(field -> {
+                    try {
+                        final String permName = (String) field.get(Manifest.permission.class);
+                        final PermissionInfo permissionInfo = getPackageManager().getPermissionInfo(permName, GET_META_DATA);
+                        Log.d("permissions", "Adding permission " + permissionInfo.name);
+                        return permissionInfo.name;
+                    } catch (final PackageManager.NameNotFoundException | IllegalAccessException e) {
+                        e.printStackTrace();
+                        return null; // Using null to indicate a value that cannot be processed
+                    }
+                })
+                .filter(Objects::nonNull)
+                .sequential()
+                .collect(Collectors.toMap(
+                        MainActivity::extractId,
+                        Function.identity(),
+                        (a, b) -> {
+                            throw new UnsupportedOperationException("No parallel reduction");
+                        },
+                        LinkedHashMap::new));
+    }
+
+    private static String extractId(final String permissionName) {
+        final String[] trimmedPerm = permissionName.split("\\.", 3);
+        return trimmedPerm[trimmedPerm.length - 1];
     }
 
     private ArrayAdapter<String> createAdapter(
             final Map<String, String> permissions) {
         final List<String> inputList = new ArrayList<>();
-        inputList.add(GET_APPS_KEY);
+        inputList.add(GET_APPS_KEY); // Set the special permission first in the list
         inputList.addAll(permissions.keySet());
         return new ArrayAdapter<>(
                 this,
